@@ -16,13 +16,12 @@ document.getElementById("fileInput").addEventListener("change", async function (
   const modList = document.getElementById("modList");
   modList.innerHTML = ""; // clear previous entries
 
-  // Only work with Minecraft game
   if (json.game !== "minecraft") {
     alert("This mod is not for Minecraft!");
     return;
   }
 
-  // Display Minecraft-specific info
+  // Display game info
   const gameInfoDiv = document.createElement("div");
   gameInfoDiv.className = "game-info";
 
@@ -48,6 +47,14 @@ document.getElementById("fileInput").addEventListener("change", async function (
 
   modList.appendChild(gameInfoDiv);
 
+  // Animate game info
+  gsap.from(gameInfoDiv, {
+    opacity: 0,
+    y: 100,
+    ease: "elastic.out(1, 0.5)",
+    duration: 1
+  });
+
   // Group by category
   const categories = {};
 
@@ -67,7 +74,7 @@ document.getElementById("fileInput").addEventListener("change", async function (
     });
   });
 
-  // Display per category
+  // Display categories
   for (const [category, items] of Object.entries(categories)) {
     const catDiv = document.createElement("div");
     catDiv.className = "category-block";
@@ -101,5 +108,35 @@ document.getElementById("fileInput").addEventListener("change", async function (
     });
 
     modList.appendChild(catDiv);
+
+    // Animate each category block as it enters the viewport 💖
+    gsap.from(catDiv, {
+      scrollTrigger: {
+        trigger: catDiv,
+        start: "top 90%",
+      },
+      opacity: 0,
+      y: 50,
+      duration: 1,
+      ease: "elastic.out(1, 0.4)"
+    });
+
+    // Animate each mod inside
+    catDiv.querySelectorAll(".mod-item").forEach(modItem => {
+      animateModItem(modItem);
+    });
   }
 });
+
+function animateModItem(modItem) {
+  gsap.from(modItem, {
+    scrollTrigger: {
+      trigger: modItem,
+      start: "top 95%",
+    },
+    opacity: 0,
+    x: 40,
+    duration: 0.8,
+    ease: "elastic.out(1, 0.5)"
+  });
+}
