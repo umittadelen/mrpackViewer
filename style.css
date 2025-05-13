@@ -1,10 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
+
 :root {
   --primary-color: #d63384;   /* Pink for headings and accents */
   --background-color: #f0f8ff;  /* Light blue background */
   --card-background-color: #fff0f5;  /* Soft pinkish background for card-like elements */
   --text-color: #333;          /* Dark gray text */
   --border-radius: 10px;       /* Consistent border radius */
-  --font-family: "Comic Sans MS", cursive, sans-serif; /* Fun font */
+  --font-family: "Quicksand", "Comic Sans MS", cursive, sans-serif; /* Fun font */
   --max-width: 700px;          /* Container max width */
   --padding: 2em;              /* General padding */
 }
