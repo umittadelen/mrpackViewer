@@ -1,0 +1,100 @@
+:root {
+  --primary-color: #d63384;
+  --secondary-color: #ffb6c1;
+  --background-color: #f0f8ff;
+  --card-background-color: #fff0f5;
+  --game-info-background: #fce4ec;
+  --button-background: #90ee90;
+  --button-hover: #77dd77;
+  --text-color: #333;
+  --secondary-text-color: #555;
+  --border-radius: 10px;
+  --font-family: "Comic Sans MS", cursive, sans-serif;
+  --max-width: 700px;
+  --padding: 2em;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  text-align: center;
+  padding: var(--padding);
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: auto;
+}
+
+input[type="file"] {
+  margin: 1em 0;
+}
+
+.mod-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  margin-top: 2em;
+}
+
+.category-block {
+  margin-top: 2em;
+  padding: 1em;
+  background-color: var(--card-background-color);
+  border: 2px solid var(--secondary-color);
+  border-radius: var(--border-radius);
+}
+
+.category-block h2 {
+  margin-top: 0;
+  font-size: 1.4em;
+  color: var(--primary-color);
+  border-bottom: 1px dashed var(--secondary-color);
+  padding-bottom: 0.3em;
+}
+
+.game-info {
+  background-color: var(--game-info-background);
+  border-radius: var(--border-radius);
+  border: 2px solid var(--secondary-color);
+  padding: 1.5em;
+  margin-bottom: 1em;
+}
+
+.game-info h2 {
+  color: var(--primary-color);
+}
+
+.game-info p {
+  color: var(--secondary-text-color);
+  font-size: 1.1em;
+}
+
+.mod-item {
+  margin-top: 0.7em;
+  background: #ffffff;
+  padding: 0.7em;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.mod-item h3 {
+  margin: 0 0 0.5em;
+}
+
+.download-button {
+  margin-top: 0.5em;
+  display: inline-block;
+  background-color: var(--button-background);
+  color: black;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.download-button:hover {
+  background-color: var(--button-hover);
+}
