@@ -132,7 +132,7 @@ function animateModItem(modItem) {
   gsap.from(modItem, {
     scrollTrigger: {
       trigger: modItem,
-      start: "top 95%",
+      start: "top 100%",
     },
     opacity: 0,
     x: 40,
