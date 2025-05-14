@@ -113,12 +113,12 @@ document.getElementById("fileInput").addEventListener("change", async function (
     gsap.from(catDiv, {
       scrollTrigger: {
         trigger: catDiv,
-        start: "top 90%",
+        start: "top 100%",
       },
       opacity: 0,
       y: 50,
       duration: 1,
-      ease: "elastic.out(1, 0.4)"
+      ease: "elastic.out(1, 0.5)"
     });
 
     // Animate each mod inside
