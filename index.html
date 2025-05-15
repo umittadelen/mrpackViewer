@@ -1,22 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="icon" type="image/x-icon" href="https://modrinth.com/favicon.ico">
-  <title>MrPack Viewer</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>Modrinth .mrpack (Modpack) Viewer</h1>
-    <input type="file" id="fileInput" accept=".mrpack" />
-    <div id="modList" class="mod-list"></div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
-  <script src="script.js" defer></script>
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<link rel="icon" type="image/x-icon" href="https://modrinth.com/favicon.ico">
+	<title>MrPack Viewer</title>
+	<link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+	<div class="container">
+		<h1>Modrinth .mrpack (Modpack) Viewer</h1>
+		
+		<label class="file-upload" id="drop-area">
+			<input type="file" id="fileInput" accept=".mrpack"/>
+			click here or drag and drop a .mrpack file
+		</label>
+		<div id="modList" class="mod-list"></div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+	<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+	<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+	<script src="script.js" defer></script>
 </body>
+
 </html>
