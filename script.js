@@ -22,6 +22,10 @@ dropArea.addEventListener("drop", (event) => {
 	}
 });
 
+function formatModName(name) {
+  return name.replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
 async function onFileUpload(event) {
 	const file = event.target.files[0];
 	if (!file) return;
@@ -86,7 +90,6 @@ async function onFileUpload(event) {
 		const parts = file.path.split('/');
 		const category = parts[0];
 		const fullFilename = parts[parts.length - 1];
-		const nameWithoutExt = fullFilename.replace(/\.[^/.]+$/, '');
 
 		let projectData = null;
 
@@ -144,7 +147,7 @@ async function onFileUpload(event) {
 			mod_item_content.className = "mod-item-content";
 
 			const name = document.createElement("h3");
-			name.textContent = mod.name;
+			name.textContent = formatModName(mod.name);
 			mod_item_content.appendChild(name);
 
 			const button_row = document.createElement("div");
