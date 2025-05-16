@@ -80,7 +80,7 @@ async function onFileUpload(event) {
 	// Animate game info
 	gsap.from(gameInfoDiv, {
 		opacity: 0,
-		y: 40,
+		y: 80,
 		ease: "elastic.out(1, 0.5)",
 		duration: 1
 	});
@@ -185,7 +185,7 @@ async function onFileUpload(event) {
 				start: "top 100%",
 			},
 			opacity: 0,
-			y: 40,
+			y: 80,
 			duration: 1,
 			ease: "elastic.out(1, 0.5)"
 		});
@@ -204,7 +204,7 @@ function animateModItem(modItem) {
 			start: "top 105%",
 		},
 		opacity: 0,
-		y: 40,
+		y: 80,
 		duration: 0.8,
 		ease: "elastic.out(1, 0.5)"
 	});
