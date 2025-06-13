@@ -227,7 +227,7 @@ async function onFileUpload(event) {
 
 		modList.appendChild(catDiv);
 
-		// Animate each category block as it enters the viewport 💖
+		// Animate each category block as it enters the viewport
 		gsap.from(catDiv, {
 			scrollTrigger: {
 				trigger: catDiv,
@@ -283,6 +283,15 @@ async function fetchMrPackFromLink(link) {
     try {
         setStatus("Fetching .mrpack from link...", true);
         let mrpackUrl = link;
+
+        else if (!link.includes("/")) {
+            setStatus("Resolving Modrinth project...", true);
+            const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${link}/version`);
+            if (!versionsRes.ok) throw new Error("Failed to fetch project versions!");
+            const versions = await versionsRes.json();
+            if (!versions.length || !versions[0].files.length) throw new Error("No files found!");
+            mrpackUrl = versions[0].files[0].url;
+}
 
         const modrinthProjectMatch = link.match(/^https:\/\/modrinth\.com\/(mod|modpack)\/([^\/#?]+)/i);
         if (modrinthProjectMatch) {
