@@ -284,24 +284,28 @@ async function fetchMrPackFromLink(link) {
         setStatus("Fetching .mrpack from link...", true);
         let mrpackUrl = link;
 
-        else if (!link.includes("/")) {
-            setStatus("Resolving Modrinth project...", true);
-            const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${link}/version`);
-            if (!versionsRes.ok) throw new Error("Failed to fetch project versions!");
-            const versions = await versionsRes.json();
-            if (!versions.length || !versions[0].files.length) throw new Error("No files found!");
-            mrpackUrl = versions[0].files[0].url;
-}
-
-        const modrinthProjectMatch = link.match(/^https:\/\/modrinth\.com\/(mod|modpack)\/([^\/#?]+)/i);
-        if (modrinthProjectMatch) {
-            setStatus("Resolving Modrinth project...", true);
-            const projectIdOrSlug = modrinthProjectMatch[2];
+        // If user enters only a projectIdOrSlug (e.g., "cinematic+"), treat it as a Modrinth slug
+        const modrinthSlugMatch = link.match(/^[a-zA-Z0-9\-\+_]+$/);
+        if (modrinthSlugMatch) {
+            setStatus("Resolving Modrinth project from slug...", true);
+            const projectIdOrSlug = link;
             const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${projectIdOrSlug}/version`);
             if (!versionsRes.ok) throw new Error("Failed to fetch project versions!");
             const versions = await versionsRes.json();
             if (!versions.length || !versions[0].files.length) throw new Error("No files found for this project!");
             mrpackUrl = versions[0].files[0].url;
+        } else {
+            // If it's a Modrinth project URL
+            const modrinthProjectMatch = link.match(/^https:\/\/modrinth\.com\/(mod|modpack)\/([^\/#?]+)/i);
+            if (modrinthProjectMatch) {
+                setStatus("Resolving Modrinth project...", true);
+                const projectIdOrSlug = modrinthProjectMatch[2];
+                const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${projectIdOrSlug}/version`);
+                if (!versionsRes.ok) throw new Error("Failed to fetch project versions!");
+                const versions = await versionsRes.json();
+                if (!versions.length || !versions[0].files.length) throw new Error("No files found for this project!");
+                mrpackUrl = versions[0].files[0].url;
+            }
         }
 
         setStatus("Loading .mrpack file...", true);
