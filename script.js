@@ -11,7 +11,13 @@ function setStatus(message, loading = false) {
         ? `<div class="info-block"><span class="status-message">${message}</span><span class="status-spinner"></span></div>`
         : `<span class="status-message">${message}</span>`;
     statusBar.style.display = "block";
-    gsap.to(statusBar, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" });
+	gsap.set(statusBar, { y: -30, opacity: 0 });
+    gsap.to(statusBar, {
+		opacity: 1,
+		y: 0,
+		duration: 0.4,
+		ease: "power2.out"
+	});
 }
 
 function clearStatus(delay = 0) {
@@ -27,7 +33,6 @@ function clearStatus(delay = 0) {
         });
     }, delay);
 }
-
 
 document.getElementById("fileInput").addEventListener("change", onFileUpload);
 // Add drag and drop file upload support
@@ -92,16 +97,16 @@ async function onFileUpload(event) {
 
 	// Display game info
 	const gameInfoDiv = document.createElement("div");
-	gameInfoDiv.className = "game-info";
+	gameInfoDiv.className = "game-info"; // + class 
 
 	const modNameDiv = document.createElement("div");
 	modNameDiv.className = "info-block";
-	modNameDiv.innerHTML = `<h2>Mod Name:</h2><p>${json.name}</p>`;
+	modNameDiv.innerHTML = `<div class="flex-vertical"><h2>Mod Name:</h2><p>${json.name}</p></div>`;
 	gameInfoDiv.appendChild(modNameDiv);
 
 	const versionDiv = document.createElement("div");
 	versionDiv.className = "info-block";
-	versionDiv.innerHTML = `<h2>Version:</h2><p>${json.versionId}</p>`;
+	versionDiv.innerHTML = `<div class="flex-vertical"><h2>Version:</h2><p>${json.versionId}</p></div>`;
 	gameInfoDiv.appendChild(versionDiv);
 
 	if (json.summary) {
@@ -114,10 +119,12 @@ async function onFileUpload(event) {
 	if (json.dependencies) {
 		const depDiv = document.createElement("div");
 		depDiv.className = "info-block";
+
 		const deps = Object.entries(json.dependencies)
-			.map(([key, value]) => `<li>${key} ${value}</li>`)
+			.map(([key, value]) => `<p>${key} ${value}</p>`)
 			.join("");
-		depDiv.innerHTML = `<h2>Dependencies:</h2><ul>${deps}</ul>`;
+
+		depDiv.innerHTML = `<div class="flex-vertical"><h2>Dependencies:</h2>${deps}</div>`;
 		gameInfoDiv.appendChild(depDiv);
 	}
 
@@ -126,7 +133,7 @@ async function onFileUpload(event) {
 	// Animate game info
 	gsap.from(gameInfoDiv, {
 		opacity: 0,
-		y: 80,
+		x: 80,
 		ease: "elastic.out(1, 0.5)",
 		duration: 1
 	});
@@ -227,17 +234,7 @@ async function onFileUpload(event) {
 
 		modList.appendChild(catDiv);
 
-		// Animate each category block as it enters the viewport
-		gsap.from(catDiv, {
-			scrollTrigger: {
-				trigger: catDiv,
-				start: "top 100%",
-			},
-			opacity: 0,
-			y: 80,
-			duration: 1,
-			ease: "elastic.out(1, 0.5)"
-		});
+		animateModItem(catDiv);
 
 		// Animate each mod inside
 		catDiv.querySelectorAll(".mod-item").forEach(modItem => {
@@ -247,15 +244,11 @@ async function onFileUpload(event) {
 }
 
 function animateModItem(modItem) {
-	gsap.from(modItem, {
-		scrollTrigger: {
-			trigger: modItem,
-			start: "top 105%",
-		},
+  gsap.from(modItem, {
 		opacity: 0,
-		y: 80,
-		duration: 0.8,
-		ease: "elastic.out(1, 0.5)"
+		x: 80,
+		ease: "elastic.out(1, 0.5)",
+		duration: 1
 	});
 }
 
@@ -276,6 +269,13 @@ document.getElementById("urlInput").addEventListener("keydown", function(event) 
         if (link) {
             fetchMrPackFromLink(link);
         }
+    }
+});
+
+document.getElementById("loadBtn").addEventListener("click", function() {
+    const link = document.getElementById("urlInput").value.trim();
+    if (link) {
+        fetchMrPackFromLink(link);
     }
 });
 
@@ -323,3 +323,111 @@ async function fetchMrPackFromLink(link) {
         clearStatus(2500);
     }
 }
+
+let compatibilityChecked = false;
+
+async function checkCompatibility() {
+	const version = document.getElementById("mcVersionInput").value.trim();
+    if (!version) {
+		setStatus("Please enter a Minecraft version!", false);
+		clearStatus(1000);
+		return;
+	}
+    const modItems = document.querySelectorAll(".mod-item");
+    setStatus("Checking compatibility...", true);
+
+    let compatibleP = document.getElementById("compatible");
+    let incompatibleP = document.getElementById("incompatible");
+
+    let compatibleCount = 0;
+    let notCompatibleCount = 0;
+
+    // Collect all fetch promises
+    const tasks = Array.from(modItems).map(async (modItem) => {
+        const modrinthLink = modItem.querySelector('a[href^="https://modrinth.com/mod/"]');
+        if (!modrinthLink) return;
+        const projectId = modrinthLink.href.split("/").pop();
+
+        let compatSpan = modItem.querySelector(".compatibility-info");
+        if (!compatSpan) {
+            compatSpan = document.createElement("span");
+            compatSpan.className = "compatibility-info";
+            modItem.querySelector(".mod-item-content").appendChild(compatSpan);
+        }
+
+        try {
+            const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?game_versions=["${version}"]`);
+            const versions = await res.json(); //check also if response.ok
+			if (res.ok) {
+				if (Array.isArray(versions) && versions.length > 0) {
+					compatSpan.textContent = `Compatible with ${version}`;
+					compatSpan.style.color = "var(--green-text-color)";
+					modItem.setAttribute("data-compatible", "true");
+					compatibleCount++;
+				} else {
+					compatSpan.textContent = `Not compatible with ${version}`;
+					compatSpan.style.color = "var(--red-text-color)";
+					modItem.setAttribute("data-compatible", "false");
+					notCompatibleCount++;
+				}
+			} else {
+				compatSpan.textContent = `failed to check`;
+				compatSpan.style.color = "var(--blue-text-color)";
+				modItem.setAttribute("data-compatible", "false");
+				notCompatibleCount++;
+			}
+        } catch (e) {
+            compatSpan.textContent = `Compatibility unknown`;
+            compatSpan.style.color = "var(--blue-text-color)";
+			modItem.setAttribute("data-compatible", "false");
+            notCompatibleCount++;
+        }
+		compatibleP.innerHTML = `<span class="green">${compatibleCount} compatible</span>`;
+    	incompatibleP.innerHTML = `<span class="red">${notCompatibleCount} incompatible</span>`;
+    });
+
+    await Promise.all(tasks);
+	compatibilityChecked = true;
+
+    clearStatus(1000);
+}
+
+document.getElementById("checkCompatibilityBtn").addEventListener("click", async () => {
+    await checkCompatibility();
+});
+
+document.getElementById("showAllBtn").addEventListener("click", async () => {
+	if (compatibilityChecked) {
+		document.querySelectorAll(".mod-item").forEach(item => {
+			item.style.display = "flex";
+		});
+	} else {
+		await checkCompatibility();
+	}
+});
+document.getElementById("showCompatibleBtn").addEventListener("click", async () => {
+	if (compatibilityChecked) {
+		document.querySelectorAll(".mod-item").forEach(item => {
+			if (item.getAttribute("data-compatible") === "true") {
+				item.style.display = "flex";
+			} else {
+				item.style.display = "none";
+			}
+		});
+	} else {
+		await checkCompatibility();
+	}
+});
+document.getElementById("showIncompatibleBtn").addEventListener("click", async () => {
+	if (compatibilityChecked) {
+		document.querySelectorAll(".mod-item").forEach(item => {
+			if (item.getAttribute("data-compatible") === "false") {
+				item.style.display = "flex";
+			} else {
+				item.style.display = "none";
+			}
+		});
+	} else {
+		await checkCompatibility();
+	}
+});
