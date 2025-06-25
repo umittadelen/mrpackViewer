@@ -1,3 +1,10 @@
+let apiURL = "https://api.modrinth.com/v2";
+let header = {
+	heasers: {
+    	"User-Agent": "umittadelen/mrpackViewer/1.0 (https://github.com/umittadelen)"
+	}
+}
+
 // --- Status Bar Helpers ---
 function setStatus(message, loading = false) {
     let statusBar = document.getElementById("statusBar");
@@ -62,6 +69,14 @@ function formatModName(name) {
   return name.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
+function onRateLimit(response) {
+	if (response.description && response.error === "ratelimit_error") {
+		setStatus(response.description, false);
+		clearStatus(2000);
+		return;
+	}
+}
+
 async function onFileUpload(event) {
 	setStatus("Loading and parsing .mrpack file...", true);
 	const file = event.target.files[0];
@@ -85,6 +100,7 @@ async function onFileUpload(event) {
 	console.log(json);
 
 	const modList = document.getElementById("modList");
+	const modListPreview = document.getElementById("mod-list-preview");
 	modList.innerHTML = ""; // clear previous entries
 
 	if (json.game !== "minecraft") {
@@ -97,7 +113,19 @@ async function onFileUpload(event) {
 
 	// Display game info
 	const gameInfoDiv = document.createElement("div");
-	gameInfoDiv.className = "game-info"; // + class 
+	gameInfoDiv.className = "game-info";
+
+	/** remove the existing game-info */
+	const existingGameInfo = document.querySelector(".game-info");
+	const gameInfoPreview = document.getElementById("game-info-preview");
+	if (gameInfoPreview) {
+		gameInfoPreview.remove();
+	}
+	if (existingGameInfo) {
+		existingGameInfo.remove();
+	}
+
+	const gameInfoContainer = document.getElementById("game-info-container");
 
 	const modNameDiv = document.createElement("div");
 	modNameDiv.className = "info-block";
@@ -128,7 +156,7 @@ async function onFileUpload(event) {
 		gameInfoDiv.appendChild(depDiv);
 	}
 
-	modList.appendChild(gameInfoDiv);
+	gameInfoContainer.appendChild(gameInfoDiv);
 
 	// Animate game info
 	gsap.from(gameInfoDiv, {
@@ -150,6 +178,10 @@ async function onFileUpload(event) {
         try {
             const projectRes = await fetch(`https://api.modrinth.com/v2/version_file/${file.hashes.sha1}`).then(res => res.json());
             projectData = await fetch(`https://api.modrinth.com/v2/project/${projectRes.project_id}`).then(res => res.json());
+			if (projectData.error === "ratelimit_error") {
+				onRateLimit(projectData);
+				return;
+			}
         } catch (err) {
             console.error("Error fetching project data:", err);
         }
@@ -187,6 +219,9 @@ async function onFileUpload(event) {
 		const catTitle = document.createElement("h2");
 		catTitle.textContent = `${category}`;
 		catDiv.appendChild(catTitle);
+
+		const modContainer = document.createElement("div");
+		modContainer.className = "mod-container";
 
 		items.forEach(mod => {
 			const mod_item = document.createElement("div");
@@ -229,9 +264,13 @@ async function onFileUpload(event) {
 
 			mod_item_content.appendChild(button_row);
 			mod_item.appendChild(mod_item_content);
-			catDiv.appendChild(mod_item);
+			modContainer.appendChild(mod_item);
+			catDiv.appendChild(modContainer);
 		});
 
+		if (modListPreview) {
+			modListPreview.remove();
+		}
 		modList.appendChild(catDiv);
 
 		animateModItem(catDiv);
@@ -290,8 +329,13 @@ async function fetchMrPackFromLink(link) {
             setStatus("Resolving Modrinth project from slug...", true);
             const projectIdOrSlug = link;
             const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${projectIdOrSlug}/version`);
+			
             if (!versionsRes.ok) throw new Error("Failed to fetch project versions!");
             const versions = await versionsRes.json();
+			if (versions.error === "ratelimit_error") {
+				onRateLimit(projectData);
+				return;
+			}
             if (!versions.length || !versions[0].files.length) throw new Error("No files found for this project!");
             mrpackUrl = versions[0].files[0].url;
         } else {
@@ -303,6 +347,10 @@ async function fetchMrPackFromLink(link) {
                 const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${projectIdOrSlug}/version`);
                 if (!versionsRes.ok) throw new Error("Failed to fetch project versions!");
                 const versions = await versionsRes.json();
+				if (versions.error === "ratelimit_error") {
+					onRateLimit(projectData);
+					return;
+				}
                 if (!versions.length || !versions[0].files.length) throw new Error("No files found for this project!");
                 mrpackUrl = versions[0].files[0].url;
             }
@@ -358,6 +406,10 @@ async function checkCompatibility() {
         try {
             const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?game_versions=["${version}"]`);
             const versions = await res.json(); //check also if response.ok
+			if (versions.error === "ratelimit_error") {
+				onRateLimit(projectData);
+				return;
+			}
 			if (res.ok) {
 				if (Array.isArray(versions) && versions.length > 0) {
 					compatSpan.textContent = `Compatible with ${version}`;

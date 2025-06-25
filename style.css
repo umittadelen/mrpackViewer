@@ -13,7 +13,7 @@
 	/* Consistent border radius */
 	--font-family: "Quicksand", "Comic Sans MS", cursive, sans-serif;
 	/* Fun font */
-	--max-width: 700px;
+	--max-width: 98%;
 	/* Container max width */
 	--padding: 2em;
 	/* General padding */
@@ -31,11 +31,38 @@ body {
 	color: var(--text-color);
 	text-align: center;
 	padding: var(--padding);
+	margin: 0;
 }
 
 .container {
 	max-width: var(--max-width);
 	margin: auto;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-areas:
+		"ss1 ss2"
+		"ss3 ss3";
+	gap: 1rem;
+}
+
+.container > .section:nth-child(1) { grid-area: ss1; }
+.container > .section:nth-child(2) { grid-area: ss2; }
+.container > .section:nth-child(3) { grid-area: ss3; }
+
+@media (max-width: 768px) {
+	.container {
+		grid-template-columns: 1fr;
+		grid-template-areas:
+			"ss1"
+			"ss2"
+			"ss3";
+	}
+}
+
+.input-section {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 }
 
 .info-block {
@@ -131,6 +158,11 @@ input[type="text"]:focus {
 	overflow: hidden;
 }
 
+.file-upload-container {
+	margin-top: auto;
+	width: 100%;
+}
+
 .file-upload-container button {
 	background-color: var(--primary-color);
 	color: var(--card-background-color);
@@ -170,6 +202,8 @@ input[type="text"]:focus {
 	flex-direction: column;
 	align-items: center;
 	margin-top: 2em;
+	margin-bottom: auto;
+	width: 100%;
 }
 
 .compare-container #mcVersionInput {
@@ -252,8 +286,27 @@ input[type="text"]:focus {
 	margin-top: 2em;
 }
 
+#mod-list-preview, #game-info-preview {
+	background-color: var(--card-background-color);
+	border: 2px solid var(--primary-color);
+	border-radius: var(--border-radius);
+	height: 100%;
+	align-items: center;
+	display: flex;
+	justify-content: center;
+	
+}
+
+.mod-container {
+  display: grid;
+  gap: 1rem;
+  justify-content: center;
+  align-items: stretch;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
 .category-block {
-	padding: 1em;
+	padding: 0 1em;
 	background-color: var(--card-background-color);
 	border: 2px solid var(--primary-color);
 	/* Pink border for categories */
@@ -267,7 +320,7 @@ input[type="text"]:focus {
 	/* Pink for category titles */
 	border-bottom: 1px dashed var(--primary-color);
 	/* Pink dashed line */
-	padding-bottom: 0.3em;
+	padding: 0.3em 0;
 }
 
 .game-info {
@@ -299,10 +352,8 @@ input[type="text"]:focus {
 	border: 1px solid var(--primary-color);
 	border-radius: var(--border-radius);
 	margin-bottom: 1em;
-}
-
-.mod-item:last-child {
-	margin-bottom: 0;
+	max-width: fit-content;
+	width: fit-content;
 }
 
 .mod-item.hidden {

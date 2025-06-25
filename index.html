@@ -10,39 +10,46 @@
 </head>
 
 <body>
+	<h1>Modrinth .mrpack (Modpack) Viewer</h1>
 	<div class="container">
-		<h1>Modrinth .mrpack (Modpack) Viewer</h1>
-		
-		<div class="flex-container file-upload-container">
-			<label class="file-upload" id="drop-area">
-				<input type="file" id="fileInput" accept=".mrpack"/>
-				<p>click here or drag and drop a .mrpack file</p>
-				<input type="text" id="urlInput" placeholder="or enter the link here"/>
-			</label>
-			<button id="loadBtn">Load</button>
+		<div class="section input-section">
+			<div class="flex-container file-upload-container">
+				<label class="file-upload" id="drop-area">
+					<input type="file" id="fileInput" accept=".mrpack"/>
+					<p>click here or drag and drop a .mrpack file</p>
+					<input type="text" id="urlInput" placeholder="or enter the link here"/>
+				</label>
+				<button id="loadBtn">Load</button>
+			</div>
+
+			<div class="compare-container">
+				<div class="flex-container compatibility-check">
+					<input type="text" id="mcVersionInput" placeholder="MC version (e.g. 1.21.5)" />
+					<button id="checkCompatibilityBtn">Check Compatibility</button>
+				</div>
+				
+				<div class="flex-container compatibility-results">
+					<p id="compatible"></p>
+					<p id="incompatible"></p>
+				</div>
+
+				<div id="filter-controls" class="flex-container filter-controls">
+					<button class="filter-button" id="showAllBtn">Show All</button>
+					<button class="filter-button" id="showCompatibleBtn">Compatible</button>
+					<button class="filter-button" id="showIncompatibleBtn">Incompatible</button>
+				</div>
+			</div>
 		</div>
 
-		<div class="compare-container">
-			<div class="flex-container compatibility-check">
-				<input type="text" id="mcVersionInput" placeholder="MC version (e.g. 1.21.5)" />
-				<button id="checkCompatibilityBtn">Check Compatibility</button>
-			</div>
-			
-			<div class="flex-container compatibility-results">
-				<p id="compatible"></p>
-				<p id="incompatible"></p>
-			</div>
-
-			<div id="filter-controls" class="flex-container filter-controls">
-				<button class="filter-button" id="showAllBtn">Show All</button>
-				<button class="filter-button" id="showCompatibleBtn">Compatible</button>
-				<button class="filter-button" id="showIncompatibleBtn">Incompatible</button>
-			</div>
+		<div class="section">
+			<div id="game-info-preview">Modpack info will appear here</div>
+			<div id="game-info-container" class="mod-list"></div>
 		</div>
 
-		
-
-		<div id="modList" class="mod-list"></div>
+		<div class="section">
+			<div id="mod-list-preview"><p>mods will appear here</p></div>
+			<div id="modList" class="mod-list"></div>
+		</div>
 	</div>
 
 	<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
