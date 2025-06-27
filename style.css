@@ -3,9 +3,9 @@
 :root {
 	--primary-color: #d63384;
 	/* Pink for headings and accents */
-	--background-color: #f0f8ff;
+	--background-color: rgb(255, 250, 255);
 	/* Light blue background */
-	--card-background-color: #fff0f5;
+	--card-background-color: rgb(255, 240, 245);
 	/* Soft pinkish background for card-like elements */
 	--text-color: #333;
 	/* Dark gray text */
@@ -48,6 +48,10 @@ body {
 .container > .section:nth-child(1) { grid-area: ss1; }
 .container > .section:nth-child(2) { grid-area: ss2; }
 .container > .section:nth-child(3) { grid-area: ss3; }
+
+.game-info-container.mod-list {
+    margin-top: 0;
+}
 
 @media (max-width: 768px) {
 	.container {
@@ -254,7 +258,7 @@ input[type="text"]:focus {
     cursor: pointer;
     padding: 10px;
     box-sizing: border-box;
-    width: calc(100%/3);
+	flex: 1;
     border-radius: 0;
 }
 .compare-container .filter-button:first-child {
@@ -277,24 +281,20 @@ input[type="text"]:focus {
 	justify-content: center;
 }
 
-/*better styling for input file with custom button and outline*/
-
 .mod-list {
 	display: flex;
 	flex-direction: column;
 	gap: 1em;
-	margin-top: 2em;
 }
 
 #mod-list-preview, #game-info-preview {
 	background-color: var(--card-background-color);
 	border: 2px solid var(--primary-color);
 	border-radius: var(--border-radius);
-	height: 100%;
+	height: calc(100% - 4px);
 	align-items: center;
 	display: flex;
 	justify-content: center;
-	
 }
 
 .mod-container {
@@ -306,7 +306,7 @@ input[type="text"]:focus {
 }
 
 .category-block {
-	padding: 0 1em;
+	padding: 0 1em 1em 1em;
 	background-color: var(--card-background-color);
 	border: 2px solid var(--primary-color);
 	/* Pink border for categories */
@@ -329,7 +329,7 @@ input[type="text"]:focus {
 	border: 2px solid var(--primary-color);
 	/* Pink border for game info */
 	padding: 1.5em;
-	margin-bottom: 1em;
+
 }
 
 .game-info h2 {
@@ -351,7 +351,6 @@ input[type="text"]:focus {
 	padding: 1em;
 	border: 1px solid var(--primary-color);
 	border-radius: var(--border-radius);
-	margin-bottom: 1em;
 	max-width: fit-content;
 	width: fit-content;
 }

@@ -1,4 +1,5 @@
 let apiURL = "https://api.modrinth.com/v2";
+let rateLimitExceeded = false; // max 300 requests per minute
 let header = {
 	heasers: {
     	"User-Agent": "umittadelen/mrpackViewer/1.0 (https://github.com/umittadelen)"
@@ -6,7 +7,7 @@ let header = {
 }
 
 // --- Status Bar Helpers ---
-function setStatus(message, loading = false) {
+function setStatus(message, loading = false, update = false) {
     let statusBar = document.getElementById("statusBar");
     if (!statusBar) {
         statusBar = document.createElement("div");
@@ -18,13 +19,15 @@ function setStatus(message, loading = false) {
         ? `<div class="info-block"><span class="status-message">${message}</span><span class="status-spinner"></span></div>`
         : `<span class="status-message">${message}</span>`;
     statusBar.style.display = "block";
-	gsap.set(statusBar, { y: -30, opacity: 0 });
-    gsap.to(statusBar, {
-		opacity: 1,
-		y: 0,
-		duration: 0.4,
-		ease: "power2.out"
-	});
+    if (!update) {
+        gsap.set(statusBar, { y: -30, opacity: 0 });
+        gsap.to(statusBar, {
+            opacity: 1,
+            y: 0,
+            duration: 0.4,
+            ease: "power2.out"
+        });
+    }
 }
 
 function clearStatus(delay = 0) {
@@ -69,12 +72,35 @@ function formatModName(name) {
   return name.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
-function onRateLimit(response) {
-	if (response.description && response.error === "ratelimit_error") {
-		setStatus(response.description, false);
-		clearStatus(2000);
-		return;
-	}
+let rateLimitTimeout = null;
+
+function setRateLimitStatus(retryAfter = 60) {
+    let seconds = retryAfter;
+    clearInterval(rateLimitTimeout);
+    rateLimitTimeout = setInterval(() => {
+        seconds--;
+        setStatus(`Rate limit reached! Waiting ${seconds} seconds before retrying...?`, true, true);
+        if (seconds <= 0) {
+            clearInterval(rateLimitTimeout);
+            setStatus("Reloading...", true);
+			window.location.reload();
+        }
+    }, 1000);
+}
+
+function clearRateLimitStatus() {
+    clearInterval(rateLimitTimeout);
+    clearStatus();
+}
+
+function onRateLimit(response, retryAfter = 60) {
+    if (response.description && response.error === "ratelimit_error") {
+        setRateLimitStatus(retryAfter);
+        console.warn("Rate limit reached:", response.description);
+        // Optionally, i can implement automatic retry logic here x_x
+        return true;
+    }
+    return false;
 }
 
 async function onFileUpload(event) {
@@ -102,9 +128,10 @@ async function onFileUpload(event) {
 	const modList = document.getElementById("modList");
 	const modListPreview = document.getElementById("mod-list-preview");
 	modList.innerHTML = ""; // clear previous entries
+	modList.style.display = "";
 
 	if (json.game !== "minecraft") {
-        setStatus("This mod is not for Minecraft!", false);
+        setStatus("This modpack is not for Minecraft!", false);
         clearStatus(2000);
         return;
     }
@@ -126,6 +153,7 @@ async function onFileUpload(event) {
 	}
 
 	const gameInfoContainer = document.getElementById("game-info-container");
+	gameInfoContainer.style.display = "";
 
 	const modNameDiv = document.createElement("div");
 	modNameDiv.className = "info-block";
@@ -168,38 +196,35 @@ async function onFileUpload(event) {
 
 	// Group by category
 	const fetchPromises = json.files.map(async file => {
-        const parts = file.path.split('/');
-        const category = parts[0];
-        const fullFilename = parts[parts.length - 1];
-        const nameWithoutExt = fullFilename.replace(/\.[^/.]+$/, "");
+		const parts = file.path.split('/');
+		const category = parts[0];
+		const fullFilename = parts[parts.length - 1];
+		const nameWithoutExt = fullFilename.replace(/\.[^/.]+$/, "");
 
         let projectData = null;
 
         try {
             const projectRes = await fetch(`https://api.modrinth.com/v2/version_file/${file.hashes.sha1}`).then(res => res.json());
             projectData = await fetch(`https://api.modrinth.com/v2/project/${projectRes.project_id}`).then(res => res.json());
-			if (projectData.error === "ratelimit_error") {
-				onRateLimit(projectData);
-				return;
-			}
+			if (onRateLimit(projectData)) throw new Error("Rate limited");
         } catch (err) {
             console.error("Error fetching project data:", err);
         }
 
-        return {
-            category,
-            mod: {
-                name: projectData?.title || nameWithoutExt,
-                download: file.downloads?.[0] || null,
-                icon_url: projectData?.icon_url || null,
-                project_id: projectData?.id || null
-            }
-        };
-    });
+		return {
+			category,
+			mod: {
+				name: projectData?.title || nameWithoutExt,
+				download: file.downloads?.[0] || null,
+				icon_url: projectData?.icon_url || null,
+				project_id: projectData?.id || null
+			}
+		};
+	});
 
-    const results = await Promise.all(fetchPromises);
-
-    clearStatus();
+    results = await Promise.all(fetchPromises);
+	// Remove nulls (rate limit or errors)
+	clearRateLimitStatus();
 
 	// Group mods into categories
 	const categories = {};
@@ -217,7 +242,7 @@ async function onFileUpload(event) {
 		catDiv.className = "category-block";
 
 		const catTitle = document.createElement("h2");
-		catTitle.textContent = `${category}`;
+		catTitle.innerHTML = `${category} <span style="font-weight: normal;">[${items.length}/${json.files.length}]</span>`;
 		catDiv.appendChild(catTitle);
 
 		const modContainer = document.createElement("div");
@@ -280,6 +305,7 @@ async function onFileUpload(event) {
 			animateModItem(modItem);
 		});
 	}
+	clearStatus();
 }
 
 function animateModItem(modItem) {
