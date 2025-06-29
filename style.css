@@ -273,7 +273,6 @@ input[type="text"]:focus {
 	border: 2px solid var(--primary-color);
 	border-top: none;
 	border-radius: 0;
-	/*width: .compare-container input[type="text"]+.compare-container button*/
 	width: calc(100% - 4px);
 	gap: 1em;
 	display: flex;

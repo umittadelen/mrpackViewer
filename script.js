@@ -1,5 +1,4 @@
 let apiURL = "https://api.modrinth.com/v2";
-let rateLimitExceeded = false; // max 300 requests per minute
 let header = {
 	heasers: {
     	"User-Agent": "umittadelen/mrpackViewer/1.0 (https://github.com/umittadelen)"
@@ -7,27 +6,28 @@ let header = {
 }
 
 // --- Status Bar Helpers ---
-function setStatus(message, loading = false, update = false) {
-    let statusBar = document.getElementById("statusBar");
-    if (!statusBar) {
-        statusBar = document.createElement("div");
-        statusBar.id = "statusBar";
-        statusBar.className = "status-bar";
-        document.body.appendChild(statusBar);
-    }
-    statusBar.innerHTML = loading
-        ? `<div class="info-block"><span class="status-message">${message}</span><span class="status-spinner"></span></div>`
-        : `<span class="status-message">${message}</span>`;
-    statusBar.style.display = "block";
-    if (!update) {
-        gsap.set(statusBar, { y: -30, opacity: 0 });
-        gsap.to(statusBar, {
-            opacity: 1,
-            y: 0,
-            duration: 0.4,
-            ease: "power2.out"
-        });
-    }
+function setStatus(message, loading = false) {
+	let statusBar = document.getElementById("statusBar");
+	const isNew = !statusBar;
+	if (!statusBar) {
+		statusBar = document.createElement("div");
+		statusBar.id = "statusBar";
+		statusBar.className = "status-bar";
+		document.body.appendChild(statusBar);
+	}
+	statusBar.innerHTML = loading
+		? `<div class="info-block"><span class="status-message">${message}</span><span class="status-spinner"></span></div>`
+		: `<span class="status-message">${message}</span>`;
+	statusBar.style.display = "block";
+	if (isNew) {
+		gsap.set(statusBar, { y: -30, opacity: 0 });
+		gsap.to(statusBar, {
+			opacity: 1,
+			y: 0,
+			duration: 0.4,
+			ease: "power2.out"
+		});
+	}
 }
 
 function clearStatus(delay = 0) {
@@ -39,7 +39,7 @@ function clearStatus(delay = 0) {
             y: -30,
             duration: 0.4,
             ease: "power2.in",
-            onComplete: () => { statusBar.style.display = "none"; }
+            onComplete: () => { statusBar.remove(); }
         });
     }, delay);
 }
@@ -70,37 +70,6 @@ dropArea.addEventListener("drop", (event) => {
 
 function formatModName(name) {
   return name.replace(/([a-z])([A-Z])/g, '$1 $2');
-}
-
-let rateLimitTimeout = null;
-
-function setRateLimitStatus(retryAfter = 60) {
-    let seconds = retryAfter;
-    clearInterval(rateLimitTimeout);
-    rateLimitTimeout = setInterval(() => {
-        seconds--;
-        setStatus(`Rate limit reached! Waiting ${seconds} seconds before retrying...?`, true, true);
-        if (seconds <= 0) {
-            clearInterval(rateLimitTimeout);
-            setStatus("Reloading...", true);
-			window.location.reload();
-        }
-    }, 1000);
-}
-
-function clearRateLimitStatus() {
-    clearInterval(rateLimitTimeout);
-    clearStatus();
-}
-
-function onRateLimit(response, retryAfter = 60) {
-    if (response.description && response.error === "ratelimit_error") {
-        setRateLimitStatus(retryAfter);
-        console.warn("Rate limit reached:", response.description);
-        // Optionally, i can implement automatic retry logic here x_x
-        return true;
-    }
-    return false;
 }
 
 async function onFileUpload(event) {
@@ -206,7 +175,6 @@ async function onFileUpload(event) {
         try {
             const projectRes = await fetch(`https://api.modrinth.com/v2/version_file/${file.hashes.sha1}`).then(res => res.json());
             projectData = await fetch(`https://api.modrinth.com/v2/project/${projectRes.project_id}`).then(res => res.json());
-			if (onRateLimit(projectData)) throw new Error("Rate limited");
         } catch (err) {
             console.error("Error fetching project data:", err);
         }
@@ -223,8 +191,6 @@ async function onFileUpload(event) {
 	});
 
     results = await Promise.all(fetchPromises);
-	// Remove nulls (rate limit or errors)
-	clearRateLimitStatus();
 
 	// Group mods into categories
 	const categories = {};
@@ -235,8 +201,9 @@ async function onFileUpload(event) {
 		categories[category].push(mod);
 	}
 
-
 	// Display categories
+	modList.innerHTML = "";
+
 	for (const [category, items] of Object.entries(categories)) {
 		const catDiv = document.createElement("div");
 		catDiv.className = "category-block";
@@ -358,10 +325,6 @@ async function fetchMrPackFromLink(link) {
 			
             if (!versionsRes.ok) throw new Error("Failed to fetch project versions!");
             const versions = await versionsRes.json();
-			if (versions.error === "ratelimit_error") {
-				onRateLimit(projectData);
-				return;
-			}
             if (!versions.length || !versions[0].files.length) throw new Error("No files found for this project!");
             mrpackUrl = versions[0].files[0].url;
         } else {
@@ -373,10 +336,6 @@ async function fetchMrPackFromLink(link) {
                 const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${projectIdOrSlug}/version`);
                 if (!versionsRes.ok) throw new Error("Failed to fetch project versions!");
                 const versions = await versionsRes.json();
-				if (versions.error === "ratelimit_error") {
-					onRateLimit(projectData);
-					return;
-				}
                 if (!versions.length || !versions[0].files.length) throw new Error("No files found for this project!");
                 mrpackUrl = versions[0].files[0].url;
             }
@@ -432,10 +391,6 @@ async function checkCompatibility() {
         try {
             const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?game_versions=["${version}"]`);
             const versions = await res.json(); //check also if response.ok
-			if (versions.error === "ratelimit_error") {
-				onRateLimit(projectData);
-				return;
-			}
 			if (res.ok) {
 				if (Array.isArray(versions) && versions.length > 0) {
 					compatSpan.textContent = `Compatible with ${version}`;
@@ -473,7 +428,6 @@ async function checkCompatibility() {
 document.getElementById("checkCompatibilityBtn").addEventListener("click", async () => {
     await checkCompatibility();
 });
-
 document.getElementById("showAllBtn").addEventListener("click", async () => {
 	if (compatibilityChecked) {
 		document.querySelectorAll(".mod-item").forEach(item => {
