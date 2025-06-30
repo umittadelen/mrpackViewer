@@ -203,6 +203,7 @@ async function onFileUpload(event) {
 
 	// Display categories
 	modList.innerHTML = "";
+	document.getElementById("modSearchInput").style.display = "block";
 
 	for (const [category, items] of Object.entries(categories)) {
 		const catDiv = document.createElement("div");
@@ -276,7 +277,7 @@ async function onFileUpload(event) {
 }
 
 function animateModItem(modItem) {
-  gsap.from(modItem, {
+  	gsap.from(modItem, {
 		opacity: 0,
 		x: 80,
 		ease: "elastic.out(1, 0.5)",
@@ -431,7 +432,10 @@ document.getElementById("checkCompatibilityBtn").addEventListener("click", async
 document.getElementById("showAllBtn").addEventListener("click", async () => {
 	if (compatibilityChecked) {
 		document.querySelectorAll(".mod-item").forEach(item => {
-			item.style.display = "flex";
+			if (item.getAttribute("controlled-by-search") !== "true") {
+				item.style.display = "flex";
+				item.removeAttribute("controlled-by-compatibility");
+			}
 		});
 	} else {
 		await checkCompatibility();
@@ -440,10 +444,12 @@ document.getElementById("showAllBtn").addEventListener("click", async () => {
 document.getElementById("showCompatibleBtn").addEventListener("click", async () => {
 	if (compatibilityChecked) {
 		document.querySelectorAll(".mod-item").forEach(item => {
-			if (item.getAttribute("data-compatible") === "true") {
+			if (item.getAttribute("data-compatible") === "true" && item.getAttribute("controlled-by-search") !== "true") {
 				item.style.display = "flex";
+				item.removeAttribute("controlled-by-compatibility");
 			} else {
 				item.style.display = "none";
+				item.setAttribute("controlled-by-compatibility", "true");
 			}
 		});
 	} else {
@@ -453,13 +459,29 @@ document.getElementById("showCompatibleBtn").addEventListener("click", async () 
 document.getElementById("showIncompatibleBtn").addEventListener("click", async () => {
 	if (compatibilityChecked) {
 		document.querySelectorAll(".mod-item").forEach(item => {
-			if (item.getAttribute("data-compatible") === "false") {
+			if (item.getAttribute("data-compatible") === "false" && item.getAttribute("controlled-by-search") !== "true") {
 				item.style.display = "flex";
+				item.removeAttribute("controlled-by-compatibility");
 			} else {
 				item.style.display = "none";
+				item.setAttribute("controlled-by-compatibility", "true");
 			}
 		});
 	} else {
 		await checkCompatibility();
 	}
+});
+document.getElementById("modSearchInput").addEventListener("input", function(event) {
+	const query = event.target.value.toLowerCase();
+	document.querySelectorAll(".mod-item").forEach(item => {
+		const name = item.querySelector("h3")?.textContent.toLowerCase() || "";
+		const hiddenByCompat = item.getAttribute("controlled-by-compatibility") === "true";
+		if (name.includes(query) && !hiddenByCompat) {
+			item.style.display = "flex";
+			item.removeAttribute("controlled-by-search");
+		} else {
+			item.style.display = "none";
+			item.setAttribute("controlled-by-search", "true");
+		}
+	});
 });

@@ -364,12 +364,16 @@ input[type="text"]:focus {
   transition: opacity 0.3s;
 }
 
-.mod-item img {
+.mod-item .mod-icon {
 	width: 100px;
-	height: auto;
+	height: 100px;
+	object-fit: contain;
 	border-radius: var(--border-radius);
 	border: 1px solid var(--primary-color);
 	flex-shrink: 0;
+	display: block;
+  	box-sizing: border-box;
+	background-color: #fff;
 }
 
 .mod-item-content {
@@ -402,4 +406,16 @@ input[type="text"]:focus {
 	flex-wrap: wrap;
 	justify-content: center;
 	gap: 0.5em;
+}
+
+#modSearchInput {
+  width: 100%;
+  box-sizing: border-box;
+  height: 50px;
+  margin-bottom: 1em;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 2px solid var(--primary-color);
+  text-align: center;
+  background-color: var(--card-background-color);
 }
