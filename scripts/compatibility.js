@@ -1,4 +1,5 @@
 import { setStatus, clearStatus } from "./statusBar.js";
+import { apiURL, header } from "./variables.js";
 
 let compatibilityChecked = false;
 
