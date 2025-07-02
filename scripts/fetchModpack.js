@@ -3,6 +3,8 @@ import { setStatus, clearStatus } from "./statusBar.js";
 import { onFileUpload } from "./onFileUpload.js";
 
 async function fetchMrPackFromLink(link) {
+    let catchedError = false;
+    let file;
     try {
         setStatus("Fetching .mrpack from link...", true);
         let mrpackUrl = link;
@@ -37,14 +39,24 @@ async function fetchMrPackFromLink(link) {
         if (!response.ok) throw new Error("Failed to fetch .mrpack file!");
 
         const blob = await response.blob();
-        const file = new File([blob], "from-url.mrpack");
+        file = new File([blob], "from-url.mrpack");
         
         // Simulate file upload
-        await onFileUpload({ target: { files: [file] } });
+        catchedError = false;
+        
     } catch (err) {
-        console.error("Error loading .mrpack from link:", err);
-        setStatus("Couldn't load the .mrpack file from the provided link!", false);
-        clearStatus(2500);
+        catchedError = true;
+        if (err.error === "ratelimit_error") {
+            setStatus("Rate limit reached! Please try again later.", false);
+            clearStatus(4000);
+        } else {
+            console.error("Error loading .mrpack from link:", err);
+            setStatus("Couldn't load the .mrpack file from the provided link!", false);
+            clearStatus(2500);
+        }
+    }
+    if (!catchedError) {
+        await onFileUpload({ target: { files: [file] } });
     }
 }
 
