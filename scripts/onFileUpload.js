@@ -181,6 +181,11 @@ async function onFileUpload(event) {
 				const icon = document.createElement("img");
 				icon.src = mod.icon_url;
 				icon.className = "mod-icon";
+				icon.addEventListener("load", function() {
+					if (icon.naturalWidth < 50 || icon.naturalHeight < 50) {
+						icon.style.imageRendering = "pixelated";
+					}
+				});
 				mod_item.appendChild(icon);
 			}
 
